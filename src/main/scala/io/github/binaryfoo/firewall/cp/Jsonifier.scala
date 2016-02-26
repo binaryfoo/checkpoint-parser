@@ -16,7 +16,7 @@ object Jsonifier {
       case FwrLiteral(value) => quote(value)
       case FwrNone => "null"
       case FwrTableRef(value) => quote(value)
-      case FwrAddressRange(start, end) => quote(start + "-" + end)
+      case FwrAddressRange(start, end) => "[" + quote(start) + "," + quote(end) + "]"
     }
   }
 
