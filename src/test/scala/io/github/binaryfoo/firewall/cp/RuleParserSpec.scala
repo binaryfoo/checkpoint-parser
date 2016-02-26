@@ -1,7 +1,7 @@
 package io.github.binaryfoo.firewall.cp
 
+import io.github.binaryfoo.firewall.cp.RuleParser.Success
 import io.github.binaryfoo.firewall.cp.rules.{FwrAddressRange, FwrLiteral, FwrObject, FwrTableRef}
-import RuleParser.Success
 
 class RuleParserSpec extends FwSpec {
 
@@ -62,6 +62,31 @@ class RuleParserSpec extends FwSpec {
                   |""".stripMargin
     val Success(rules, _) = RuleParser.parse(RuleParser.fwrObject, input)
     rules shouldBe FwrObject("asm_http_worm2_pattern", List(FwrObject("type", List(FwrLiteral("str"))), FwrObject("val", List(FwrLiteral("(cmd\\.exe)|(root\\.exe)")))))
+  }
+
+  it should "handle space in a quoted literal" in {
+    val input =
+      """:http_sql_injection_reset_vals (
+        |	: ("/")
+        |	: (.)
+        |	: (" ")
+        |	: ("=")
+        |	: ("%22")
+        |	: ("'")
+        |)""".stripMargin
+    val Success(rules, _) = RuleParser.parse(RuleParser.fwrObject, input)
+    rules shouldBe FwrObject("http_sql_injection_reset_vals", List(FwrLiteral("/"), FwrLiteral("."), FwrLiteral(" "), FwrLiteral("="), FwrLiteral("%22"), FwrLiteral("'")))
+  }
+
+  it should "handle ReferenceObject" in {
+    val input =
+      """:p2p_http_patterns_global (ReferenceObject
+        |	:Table (asm)
+        |	:Name (BittorrentHttpPatterns)
+        |	:Uid ("{31681C15-8B8B-4BCE-A20A-7F60F8C9792E}")
+        |)""".stripMargin
+    val Success(rules, _) = RuleParser.parse(RuleParser.fwrObject, input)
+    rules shouldBe FwrObject("p2p_http_patterns_global", List(FwrObject("ReferenceObject", List(FwrObject("Table", List(FwrLiteral("asm"))), FwrObject("Name", List(FwrLiteral("BittorrentHttpPatterns"))), FwrObject("Uid", List(FwrLiteral("{31681C15-8B8B-4BCE-A20A-7F60F8C9792E}")))))))
   }
 
   "wc_control.W" should "be parsed" in {

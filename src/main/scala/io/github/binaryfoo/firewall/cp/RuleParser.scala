@@ -6,6 +6,12 @@ import scala.util.parsing.combinator.RegexParsers
 
 class RuleParser extends RegexParsers {
 
+  private var quoted = false
+
+  override def skipWhitespace: Boolean = {
+    if (quoted) false else super.skipWhitespace
+  }
+
   def identifier: Parser[String] = """[-a-zA-Z0-9_.]+""".r
 
   def tag: Parser[String] = ":" ~> identifier
@@ -18,11 +24,20 @@ class RuleParser extends RegexParsers {
     case start ~ end => FwrAddressRange(start, end)
   }
 
-  def strayLiteral: Parser[FwrLiteral] = ": (\"" ~> literal <~ "\")" ^^ { FwrLiteral }
+  def strayLiteral: Parser[FwrLiteral] = ": (" ~> (quotedLiteral | literal) <~ ")" ^^ { FwrLiteral }
 
-  def literal: Parser[String] = """[^")]+""".r
+  def quotedLiteral: Parser[String] = toggle("\"", true) ~> untilQuote <~ toggle("\"", false)
 
-  def quotedLiteral: Parser[String] = "\"" ~> """[^"]+""".r <~ "\""
+  def literal: Parser[String] = """[^") ]+""".r
+
+  def untilQuote: Parser[String] = """[^"]+""".r
+
+  def toggle(p: Parser[String], inQuote: Boolean): Parser[String] = {
+    p.map { r =>
+      quoted = inQuote
+      r
+    }
+  }
 
   def emptyObject: Parser[FwrObject] = (tag <~ "()") ^^ { FwrObject(_) }
 
@@ -39,7 +54,11 @@ class RuleParser extends RegexParsers {
     case None ~ objs => FwrObject(null, objs)
   }
 
-  def fwrObject: Parser[FwrValue] = track(emptyObject | tableRef | addressRange | strayLiteral | compoundObject | primitiveObject | namedObject)
+  def referenceObject: Parser[FwrObject] = (identifier ~ rep1(fwrObject)) ^^ {
+    case tag ~ objs => FwrObject(tag, objs)
+  }
+
+  def fwrObject: Parser[FwrValue] = track(emptyObject | tableRef | addressRange | primitiveObject | compoundObject | strayLiteral | namedObject | referenceObject)
 
   def root: Parser[FwrObject] = "(" ~> rep(fwrObject) <~ ")" ^^ { objs => FwrObject(null, objs) }
 
