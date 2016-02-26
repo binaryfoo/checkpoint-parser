@@ -1,6 +1,7 @@
 package io.github.binaryfoo.firewall.cp
 
 import io.github.binaryfoo.firewall.cp.rules.{FwrAddressRange, FwrLiteral, FwrObject, FwrTableRef}
+import RuleParser.Success
 
 class RuleParserSpec extends FwSpec {
 
@@ -51,6 +52,16 @@ class RuleParserSpec extends FwSpec {
     val rules = RuleParser.parse(input)
     rules.values(0) shouldBe FwrObject("auth")
     rules.values(1) shouldBe FwrObject("rules", List(FwrObject("disabled", List(FwrLiteral("false")))))
+  }
+
+  it should "handle ) within quoted literal" in {
+    val input = """: (asm_http_worm2_pattern
+                  |	:type (str)
+                  |	:val ("(cmd\.exe)|(root\.exe)")
+                  |)
+                  |""".stripMargin
+    val Success(rules, _) = RuleParser.parse(RuleParser.fwrObject, input)
+    rules shouldBe FwrObject("asm_http_worm2_pattern", List(FwrObject("type", List(FwrLiteral("str"))), FwrObject("val", List(FwrLiteral("(cmd\\.exe)|(root\\.exe)")))))
   }
 
   "wc_control.W" should "be parsed" in {

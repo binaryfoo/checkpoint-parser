@@ -22,7 +22,7 @@ class RuleParser extends RegexParsers {
 
   def literal: Parser[String] = """[^")]+""".r
 
-  def quotedLiteral: Parser[String] = "\"" ~> literal <~ "\""
+  def quotedLiteral: Parser[String] = "\"" ~> """[^"]+""".r <~ "\""
 
   def emptyObject: Parser[FwrObject] = (tag <~ "()") ^^ { FwrObject(_) }
 
@@ -51,6 +51,7 @@ class RuleParser extends RegexParsers {
     if (in.offset > lastOffset && r != null) {
       lastOffset = in.offset
       lastResult = r
+//      println(lastOffset + " " + r)
     }
     r
   }
