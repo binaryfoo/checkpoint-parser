@@ -20,6 +20,7 @@ object Jsonifier {
     }
   }
 
-  def quote(s: String): String = "\"" + s + "\""
+  private def quote(s: String): String = "\"" + escape(s) + "\""
 
+  private def escape(s: String): String = s.replace("""\""", """\\""")
 }
