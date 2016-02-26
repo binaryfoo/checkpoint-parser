@@ -90,7 +90,7 @@ class RuleParserSpec extends FwSpec {
   }
 
   "wc_control.W" should "be parsed" in {
-    val rules = RuleParser.parse(read("wo_control.W"))
+    val rules = RuleParser.parse(contentsOf("wo_control.W"))
     rules.values.length shouldBe 5
   }
 

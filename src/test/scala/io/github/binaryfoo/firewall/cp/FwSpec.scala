@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class FwSpec extends FlatSpec with Matchers {
 
-  def read(fileName: String): String = {
+  def contentsOf(fileName: String): String = {
     new String(Files.readAllBytes(Paths.get(testFile(fileName))))
   }
 
