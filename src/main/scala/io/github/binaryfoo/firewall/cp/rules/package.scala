@@ -33,10 +33,16 @@ package object rules {
   //   tag = drop
   //   children starts with FwrField("AdminInfo"
   case class FwrObject(tag: Tag, values: List[FwrValue] = List.empty) extends FwrValue {
+
     def apply(field: String): Option[FwrObject] = {
       values.collectFirst {
         case o@FwrObject(childName, _) if childName == field => o
       }
     }
+
+    def has(field: String): Boolean = {
+      apply(field).nonEmpty
+    }
+
   }
 }
